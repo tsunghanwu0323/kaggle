@@ -1,0 +1,19 @@
+preprocessing:
+  classes:
+    - toxic
+    - severe_toxic
+    - obscene
+    - threat
+    - insult
+    - identity_hate
+  input_convertor: count_vectorization
+  input_testset: ./data/test.csv
+  input_trainset: ./data/train.csv
+  input_text_column: comment_text
+  input_id_column: id
+  random_seed: 0
+  split_ratio: 0.3
+training:
+  model_name: naivebayse
+predict:
+  output_path: ./data/submission.csv
