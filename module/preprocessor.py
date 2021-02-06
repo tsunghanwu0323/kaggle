@@ -1,5 +1,7 @@
 import string
 import pandas as pd
+import numpy as np
+from tensorflow import keras
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 
@@ -14,8 +16,10 @@ class Preprocessor(object):
     @staticmethod
     def clean_text(text):
         text = text.strip().lower().replace('\n', '')
+
         # tokenization
         words = text.split()
+
         # filter punctuation
         filter_table = str.maketrans('', '', string.punctuation)
         clean_words = [w.translate(filter_table) for w in words if len(w.translate(filter_table))]
@@ -52,18 +56,20 @@ class Preprocessor(object):
         )
 
         test_data = pd.read_csv(self.config['input_testset'])
+        # fill na test data with 'unknown'
         test_data[self.config['input_text_column']].fillna("unknown", inplace=True)
         self.test_x, self.test_ids = self._parse(test_data, is_test=True)
 
     def process(self):
         input_convertor = self.config.get('input_convertor', None)
-        # label_convertor = self.config.get('label_convertor', None)
         data_x, data_y, train_x, train_y, validate_x, validate_y, test_x = self.data_y, self.data_y, self.train_x, self.train_y, self.validate_x, self.validate_y, self.test_x
 
         if input_convertor == 'count_vectorization':
             train_x, validate_x, test_x = self.count_vectorization(train_x, validate_x, test_x)
         elif input_convertor == 'tfidf_vectorization':
             train_x, validate_x, test_x = self.tfidf_vectorization(train_x, validate_x, test_x)
+        elif input_convertor == 'nn_vectorization':
+            train_x, validate_x, test_x = self.nn_vectorization(train_x, validate_x, test_x)
 
         return data_x, data_y, train_x, train_y, validate_x, validate_y, test_x
 
@@ -80,3 +86,40 @@ class Preprocessor(object):
         vectorized_validate_x = vectorizer.transform(validate_x)
         vectorized_test_x = vectorizer.transform(test_x)
         return vectorized_train_x, vectorized_validate_x, vectorized_test_x
+
+    def nn_vectorization(self, train_x, validate_x, test_x):
+        self.word2ind = {}
+        self.ind2word = {}
+        special_tokens = ['<pad>', '<unk>']
+
+        def add_word(word2ind, ind2word, word):
+            if word in word2ind:
+                return
+            ind2word[len(word2ind)] = word  # add word to ind2word
+            word2ind[word] = len(word2ind)
+
+        def get_ids(data_x):
+            x_ids = []
+            for sent_ in data_x:
+                ind_sent = [self.word2ind.get(i, self.word2ind['<unk>']) for i in sent_]
+                x_ids.append(ind_sent)
+            x_ids = np.array(x_ids)
+
+            return x_ids
+
+        for token in special_tokens:
+            add_word(self.word2ind, self.ind2word, token)
+
+        for sent in train_x:
+            for word in sent:
+                add_word(self.word2ind, self.ind2word, word)
+
+        train_x_ids = get_ids(train_x)
+        validate_x_ids = get_ids(validate_x)
+        test_x_ids = get_ids(test_x)
+
+        train_x_ids = keras.preprocessing.sequence.pad_sequences(train_x_ids, maxlen=self.config['max_len'], padding='post', value=self.word2ind['<pad>'])
+        validate_x_ids = keras.preprocessing.sequence.pad_sequences(validate_x_ids, maxlen=self.config['max_len'], padding='post', value=self.word2ind['<pad>'])
+        test_x_ids = keras.preprocessing.sequence.pad_sequences(test_x_ids, maxlen=self.config['max_len'], padding='post', value=self.word2ind['<pad>'])
+
+        return train_x_ids, validate_x_ids, test_x_ids

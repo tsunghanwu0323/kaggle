@@ -28,16 +28,22 @@ if __name__ == '__main__':
 
     with open(args.config, 'r') as config_file:
         try:
+            print('Preprocessing...')
             config = yaml.safe_load(config_file)
             preprocessor = Preprocessor(config['preprocessing'], logger)
             _, _, train_x, train_y, validate_x, validate_y, test_x = preprocessor.process()
 
+            if config['training']['model_name'] != 'naivebayse':
+                config['training']['vocab_size'] = len(preprocessor.word2ind.keys())
+
+            print('Training...')
             pretrained_embedding = None
             trainer = Trainer(config['training'], logger, preprocessor.classes, pretrained_embedding)
             model, accuracy, cls_report, history = trainer.fit_and_validate(train_x, train_y, validate_x, validate_y)
             logger.info("accuracy:{}".format(accuracy))
             logger.info("\n{}\n".format(cls_report))
 
+            print('Predicting...')
             predictor = Predictor(config['predict'], logger, model)
             probs = predictor.predict_prob(test_x)
             predictor.save_result(preprocessor.test_ids, probs)

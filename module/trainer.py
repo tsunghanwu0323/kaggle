@@ -1,5 +1,7 @@
 from sklearn.metrics import accuracy_score, classification_report
 from module.model import Naivebayse
+from module.model import CNN
+
 
 class Trainer:
     def __init__(self, config, logger, classes, pretrained_embedding):
@@ -12,6 +14,8 @@ class Trainer:
     def _create_model(self, classes):
         if self.config['model_name'] == 'naivebayse':
             self.model = Naivebayse(classes)
+        elif self.config['model_name'] == 'cnn':
+            self.model = CNN(classes, self.config)
         else:
             self.logger.warning("Model type {} is not supported.".format(self.config['model_name']))
 
