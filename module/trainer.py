@@ -15,7 +15,7 @@ class Trainer:
         if self.config['model_name'] == 'naivebayse':
             self.model = Naivebayse(classes)
         elif self.config['model_name'] == 'cnn':
-            self.model = CNN(classes, self.config)
+            self.model = CNN(classes, self.config, self.pretrained_embedding)
         else:
             self.logger.warning("Model type {} is not supported.".format(self.config['model_name']))
 

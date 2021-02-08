@@ -6,16 +6,21 @@ from keras.layers import Embedding, Conv1D, GlobalAvgPool1D, Dense, Dropout, Fla
 
 
 class CNN(object):
-    def __init__(self, classes, config):
+    def __init__(self, classes, config, pretrained_embedding):
         self.models = {}
         self.classes = classes
         self.num_class = len(classes)
         self.config = config
-        self.model = self._build()
+        self.model = self._build(pretrained_embedding)
 
-    def _build(self):
+    def _build(self, pretrained_embedding):
         model = Sequential()
-        model.add(Embedding(self.config['vocab_size'], self.config['embedding_dim'], embeddings_initializer="uniform",
+        if pretrained_embedding is not None:
+            model.add(Embedding(self.config['vocab_size'], self.config['embedding_dim'],
+                                weights=[pretrained_embedding],
+                                input_length=self.config['max_len'], trainable=False))
+        else:
+            model.add(Embedding(self.config['vocab_size'], self.config['embedding_dim'], embeddings_initializer="uniform",
                             input_length=self.config['max_len'], trainable=True))
         model.add(Conv1D(128, 7, activation='relu', padding='same'))
         model.add(MaxPool1D())

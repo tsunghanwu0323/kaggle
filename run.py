@@ -37,7 +37,7 @@ if __name__ == '__main__':
                 config['training']['vocab_size'] = len(preprocessor.word2ind.keys())
 
             print('Training...')
-            pretrained_embedding = None
+            pretrained_embedding = preprocessor.embedding_matrix if config['preprocessing'].get('pretrained_embedding', None) else None
             trainer = Trainer(config['training'], logger, preprocessor.classes, pretrained_embedding)
             model, accuracy, cls_report, history = trainer.fit_and_validate(train_x, train_y, validate_x, validate_y)
             logger.info("accuracy:{}".format(accuracy))
