@@ -19,13 +19,15 @@ preprocessing:
 training:
   batch_normalization: true
   batch_size: 32
-  dropout_rate: 0.5
+  dropout_rate: 0.1
   embedding_dim: 100
   epochs: 1
+  ff_dim: 128
   gradient_cliping: true
   learning_rate: 0.8
   max_len: 128
-  model_name: cnn
+  model_name: transformer
+  num_heads: 1
   optimizer: sgd
 predict:
   output_path: ./data/submission.csv

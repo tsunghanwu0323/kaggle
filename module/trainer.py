@@ -1,6 +1,5 @@
 from sklearn.metrics import accuracy_score, classification_report
-from module.model import Naivebayse
-from module.model import CNN
+from module.model import Naivebayse, CNN, TransformerClassifier
 
 
 class Trainer:
@@ -16,6 +15,8 @@ class Trainer:
             self.model = Naivebayse(classes)
         elif self.config['model_name'] == 'cnn':
             self.model = CNN(classes, self.config, self.pretrained_embedding)
+        elif self.config['model_name'] == 'transformer':
+            self.model = TransformerClassifier(classes, self.config, self.pretrained_embedding)
         else:
             self.logger.warning("Model type {} is not supported.".format(self.config['model_name']))
 
